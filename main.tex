@@ -23,9 +23,11 @@
 \maketitle
 
 \begin{abstract}
+%%briefly explain why
 As part of the analysis of high-field mouse MRI data, relevant brain tissue needs to be selected via a mask.
-For this process to be performed automatically, brain voxels need to be classified based on their signal intensity and position in the image.
-Nowadays, deep neural networks are the state-of-the-art methods for segmentation tasks in medical imaging field.
+For this process to be performed automatically, brain voxels need to be classified based both on their signal intensity and position in the image.
+Nowadays, deep neural networks are the state-of-the-art methods for tissue segmentation in biomedical imaging, and thus constitute a promising method for preclinical neuroscience.
+%% outperforms current methods is a pretty high bar. We haven't really compared it to e.g. BET and other heuristic human-MRI-derived classifiers. You can still make the case that it is better, but that's a case you need to make on theoretical grounds unless you have data for the comparison.
 We present a deep learning enabled framework for segmentation of brain tissue in functional and structural MR images, that outperforms \textbf{current methods}, requiring only a fraction of the processing time needed by them.
 \end{abstract}
 %\newpage
@@ -33,26 +35,38 @@ We present a deep learning enabled framework for segmentation of brain tissue in
 %\begin{multicols}{2}
 
 \section{Introduction}
-Manually creating training data for the deep-learning model is expensive and time consuming, as an expert needs to segment many slices per hand, enough for them to represent a big enough portion of all mice brain images.
-This is important for the model to be able generalise well, i.e. to predict well not only on the data it has already seen but on every mouse-brain MR image.
+%% deep-learning model oder classifier?
+Manually creating annotations as required to train a deep-learning model for high-resolution data is often infeasible, as it requires manual expert segmentation of vast amounts of slices.
+%% I think this explanation is superfluous
+%This is important for the model to be able generalise well, i.e. to predict well not only on the data it has already seen but on every mouse-brain MR image.
+%% I would expand on this, detailing why our approach has general-purpose applicability as a method of leveraging readily available pseudo-ground-truth data sets.
 While our purpose was to create a workflow that generates better masks than the ones used for registration, we showed that the latter could be used as training data for the deep-learning model, by applying small changes to them.
+%% In general this section should be longer and feature some references to establish the context of your work (and in your case, the familiarity with the field).
 
 \section{Methods}
-To train a deep-neural-network, the dataset to work on is as important as the architecture of the model itself, it is needed for training, evaluation and testing.
-The training examples need to be drawn from some generally unknown probability distribution, that is expected to be representative of the space of occurrences.
-We define the space of occurences as the space of which the data of interest is drawn from.
-In our case it is all the different mouse MRI data, with their corresponding labels.
-The network has to build a general model about this space that enables it to produce sufficiently accurate predictions in new cases.
+%% data set is better ( https://english.stackexchange.com/questions/2120/which-is-correct-dataset-or-data-set )
+The training data set of a classifier is as important as the architecture of the model itself.
+To improve general-purpose application, training examples need to be drawn from a usually unknown probability distribution, that is expected to be representative of the space of occurrences.
+We define the space of occurrences as the space of which the data of interest is drawn from.
+%% Which different data sets? You can go into more detail here.
+In our case this consists of all the different mouse MRI data sets, with their corresponding labels.
+Based on this occurrence space, the network has to build a general model that enables it to produce sufficiently accurate predictions in new cases.
+%% I would avoid such formulations.
+%% We don't want to highlight that we don't have the resources to do this manually (there's a simple, low-tech solution to that, called “more money”).
+%% Instead, we should point out that this is a ubiquitous concern, and that here we validate a possible solution.
 Because creating the data by segmenting the image manually is tedious and time-consuming, we chose to investigate whether it was possible to create a good performing model on a dataset that is less accurate than the wanted predictions of the model.
 
 \subsection{Model}
-It's performance and reputation in the medical image segmentation sector made the model of choice the U-Net from Ronneberger et al \cite{ronneberger_u-net:_2015}.
-It is a convolutional neural network that consists of a contracting path to capture context in addition to a symmetric expanding path that enables precise localisation.
-Localisation in this context means that a class label is assigned to each pixel.
-We used the U-Net implementation from zhixuhao \cite{zhixuhao_zhixuhao/unet_2020}, written in Keras. Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK, or Theano.
+The U-Net from Ronneberger et al \cite{ronneberger_u-net:_2015} was chosen based on its high performance in the field of biomedical image segmentation.
+This is a convolutional neural network that consists of a contracting path that captures context in addition to a symmetric expanding path that enables precise localization.
+Localization in this context means that a class label is assigned to each pixel.
+We used the U-Net implementation from zhixuhao \cite{zhixuhao_zhixuhao/unet_2020}, written in Keras.
+Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK, or Theano.
 It allows for a easily readable code and makes it thus easier to reproduce.
 
-The implementation of the U-Net from zhixuhao has, in addition to the original one, two drop-out layers.
+The implementation of the U-Net from zhixuhao has two drop-out layers in addition to the original one.
+%% These explanations are better suited for the background/introduction section.
+%% Create a paragraph or subsection there about this; the method section should be short and consist of only statements of fact, always exclude explanations, and only include “reasons” when it is absolutely impossible to move them elsewhere.
 A drop-out layer randomly sets a fraction of input units from the layer to 0 at each update during training time.
 The set fraction rate is 0.5.
 It is known that dropout helps prevent overfitting and greatly improves the performance of deep learning models \cite{srivastava_dropout:_nodate}.
@@ -63,8 +77,12 @@ The model was trained slice wise, with the coronal view and 600 as the maximum n
 The coronal view was chosen over the axial one, because the shapes of the masks are much simpler in the coronal view and thus easier to learn for the network.
 Additionally the coronal view has the advantage of higher resolution as the MR images were recorded coronally.
 
-The slice-wise predictions of the model are reconstructed to a 3D mask via the command \textit{Nifit1Image} from the neuro-imaging python package nibabel \cite{noauthor_neuroimaging_nodate}. This is done using the same affine space as the input image.
+%% very good! Mention functions and cite the packages! This is the sort of thing which is the ideal content of the method section.
+The slice-wise predictions of the model are reconstructed to a 3D mask via the command \textit{Nifit1Image} from the neuro-imaging python package nibabel \cite{noauthor_neuroimaging_nodate}.
+This is done using the same affine space as the input image.
 
+%% Losses? Or loss models?
+%% And again, too much explanation; you can give equations, but stay brief.
 Three losses were tested for the training of the model, namely the Dice-loss, the binary-cross-entropy loss and the sum of both.
 The Dice-loss is computed from the Dice score. It calculates the similarity of two binary samples X and Y with
 $$D_{coef} = \frac{2|X\cap Y|}{|X|+|Y|}$$
@@ -87,22 +105,29 @@ We quickly realised that the Dice-loss gives the best results and therefore used
 
 
 \subsection{Dataset}
-The dataset consists of 3D images and one mask for all of them.
-They were registered into a standard reference frame using the mask with SAMRI \cite{noauthor_ibt-fmi/samri_2019}, meaning that they all present the same affine space.
-SAMRI is a data analysis package of the ETH/UZH Institute for Biomedical Engineering. It is equipped with an optimized registration workflow and standard geometric space for small animal brain imaging \cite{ioanas_optimized_2019}.
-Because of variances in the mice and in the experiment setup, some of the masks do not overlap well with the brain tissue.
-To filter these images out, most of the faulty slices were removed manually from the dataset. Additionally, each mask is fit to each slice by setting the mask to zero where the slice-image is \textbf{as well}.
+The dataset consists of 3D images, transformed into a standard space with one defined mask.
+The registration to the standard reference space was performed via SAMRI \cite{noauthor_ibt-fmi/samri_2019}, and the images of the training data sets are thus defined in the same affine space.
+SAMRI is a data analysis package of the ETH/UZH Institute for Biomedical Engineering.
+It is equipped with an optimized registration workflow and standard geometric space for small animal brain imaging \cite{ioanas_optimized_2019}.
+Because of variance in mouse brain anatomy and in the experiment setup, some of the transformed data do not overlap perfectly with the reference template.
+To filter these images out, most of the incongruent slices were removed manually from the dataset.
+%% Don't understand this.
+Additionally, each mask is fitted to each slice by setting the mask to zero where the slice-image is \textbf{as well}.
 Because some pixels representing the brain tissue are zero-valued, holes result from this operation.
 To patch these, the function binary\_fill\_holes from scipy.ndimage.morphology \cite{noauthor_multi-dimensional_nodate} is used.
 
-In the coronal view, each slice is originally of shape (63, 48).
+In the coronal view, each slice of the transformed data is originally of shape (63, 48), matching the reference space resolution of \SI{200}{\micro\metre}.
 It is then reshaped into (64, 64) by adding a zero padding to the border.
-Finally, the images are normalised by first clipping it from the minimum to the 99th percentile of the data in order to remove outliers and then divided by the maximum.
+%% use LaTeX to typeset 99th correctly
+Finally, the images are normalised by first clipping them from the minimum to the 99th percentile of the data in order to remove outliers and then divided by the maximum.
 
 \subsection{Training}
 
-Because of variances in the experiment setups, MR images can differ by much.
-To account for these variations, we apply an extensive set extensive transformations to our data. Namely rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips.
+Because of diverse settings in the experiment setup, including animal manipulations causing artifacts, MR image quality can differ substantially between labs and even individual study populations.
+To account for these variations, we apply an extensive set of transformations to our data.
+This includes rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips.
+%% different order since you mentioned the last part of the sentence at the beginning of the paragraph.
+%% Also talk about why it's ok to increase the sample size like this.
 This not only increases the data set size but also makes it more representative of the general data distribution of Mice brain MR images and results in a model with a better generalisation capability.
 
 \section{Results}
