@@ -1,0 +1,80 @@
+\documentclass{article}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[justification=centering]{caption}
+\usepackage{multicol}
+\usepackage{todonotes}
+
+\captionsetup{justification=raggedright,singlelinecheck=false}
+
+
+\title{Machine Learning Enabled Mouse-Brain Segmentation}
+\author{
+ Hendrik Klug \\
+  Master Student\\
+  Department of Electrical Engineering\\
+  ETHZ\\
+  \texttt{klugh@student.ethz.ch} \\\date{January 2020}}
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+As part of the analysis of high-field mouse MRI data, relevant brain tissue needs to be selected via a mask. For this process to be performed automatically, brain voxels need to be classified based on their signal intensity and position in the image. Nowadays, deep neural networks are the state-of-the-art methods for segmentation tasks in medical imaging field. We present a deep learning enabled framework for segmentation of brain tissue in functional and structural MR images, that outperforms \textbf{current methods}, requiring only a fraction of the processing time needed by them.
+\end{abstract}
+%\newpage
+
+%\begin{multicols}{2}
+
+\section{Introduction}
+Manually creating training data for the deep-learning model is expensive and time consuming, as an expert needs to segment many slices per hand, enough for them to represent a big enough portion of all mice brain images. This is important for the model to be able generalise well, i.e. to predict well not only on the data it has already seen but on every mouse-brain MR image. While our purpose was to create a workflow that generates better masks than the ones used for registration, we showed that the latter could be used as training data for the deep-learning model, by applying small changes to them. 
+
+\section{Methods}
+To train a deep-neural-network, the dataset to work on is as important as the architecture of the model itself, it is needed for training, evaluation and testing. The training examples need to be drawn from some generally unknown probability distribution, that is expected to be representative of the space of occurrences. We define the space of occurences as the space of which the data of interest is drawn from. In our case it is all the different mouse MRI data, with their corresponding labels. The network has to build a general model about this space that enables it to produce sufficiently accurate predictions in new cases. Because creating the data by segmenting the image manually is tedious and time-consuming, we chose to investigate whether it was possible to create a good performing model on a dataset that is less accurate than the wanted predictions of the model.
+
+\subsection{Model}
+It's performance and reputation in the medical image segmentation sector made the model of choice the U-Net from Ronneberger et al \cite{ronneberger_u-net:_2015}. It is a convolutional neural network that consists of a contracting path to capture context in addition to a symmetric expanding path that enables precise localisation. Localisation in this context means that a class label is assigned to each pixel.
+We used the U-Net implementation from zhixuhao \cite{zhixuhao_zhixuhao/unet_2020}, written in Keras. Keras is a high-level neural networks API, written in Python and capable of running on top of TensorFlow, CNTK, or Theano. It allows for a easily readable code and makes it thus easier to reproduce. 
+
+The implementation of the U-Net from zhixuhao has, in addition to the original one, two drop-out layers. A drop-out layer randomly sets a fraction of input units from the layer to 0 at each update during training time. The set fraction rate is 0.5. It is known that dropout helps prevent overfitting and greatly improves the performance of deep learning models \cite{srivastava_dropout:_nodate}.
+To improve the learning process of the network, two callbacks from Keras were used \cite{noauthor_callbacks_nodate}. "ReduceLROnPlateau" reduces the learning rate when the validation loss has stopped improving and "EarlyStopping" stops the training when the validation loss has stopped improving for a number of epochs. The latter reduces computation time and prevents overfitting.
+
+The model was trained slice wise, with the coronal view and 600 as the maximum number of epochs. The coronal view was chosen over the axial one, because the shapes of the masks are much simpler in the coronal view and thus easier to learn for the network. Additionally the coronal view has the advantage of higher resolution as the MR images were recorded coronally. 
+
+The slice-wise predictions of the model are reconstructed to a 3D mask via the command \textit{Nifit1Image} from the neuro-imaging python package nibabel \cite{noauthor_neuroimaging_nodate}. This is done using the same affine space as the input image.
+
+Three losses were tested for the training of the model, namely the Dice-loss, the binary-cross-entropy loss and the sum of both. 
+The Dice-loss is computed from the Dice score. It calculates the similarity of two binary samples X and Y with
+$$D_{coef} = \frac{2|X\cap Y|}{|X|+|Y|}$$
+It is a quantity ranging from 0 to 1 that is to be maximised. The loss is then calculated with $1-D_{coef}$. Because the Dice loss is not differentiable, small changes need to be made. The two samples to be compared are not binary but have values between 0 and 1 and instead of using the logical operation \textit{and}, element wise products are used to approximate the non-differentiable intersection operation. To avoid a division by zero 1 is added on the numerator and denominator.
+Because many more pixels in the masks are 0 than 1, there is a class imbalance problem. It is a problem, because in this case a false positive gives a much higher loss than a false negative. For example, the predicting only black would give an acceptable loss, while prediciting only white pixels would not. Using the Dice coefficient as a loss function for training should make it invariant to this class imbalance problem as stated by Fausto Milletari et al. in \cite{milletari_v-net:_2016}.
+
+The binary cross-entropy loss, also called Log loss, is defined by:
+$$H_p (q) = -\frac{1}{N} \sum ^N _{i=1} y_i \cdot log(p(y_i))+(1-y_i) \cdot log(1-p(y_i))$$ 
+For pixel values of 0 and 1, it adds $log(p(y))$ for each white pixel (y=1) and $log(1-p(y))$ for every black pixel (y=0) to the loss.
+We quickly realised that the Dice-loss gives the best results and therefore used it to train the model. \todo{compare results}
+
+
+
+
+\subsection{Dataset}
+The dataset consists of 3D images and one mask for all of them. They were registered into a standard reference frame using the mask with SAMRI \cite{noauthor_ibt-fmi/samri_2019}, meaning that they all present the same affine space. SAMRI is a data analysis package of the ETH/UZH Institute for Biomedical Engineering. It is equipped with an optimized registration workflow and standard geometric space for small animal brain imaging \cite{ioanas_optimized_2019}. Because of variances in the mice and in the experiment setup, some of the masks do not overlap well with the brain tissue. To filter these images out, most of the faulty slices were removed manually from the dataset. Additionally, each mask is fit to each slice by setting the mask to zero where the slice-image is \textbf{as well}. Because some pixels representing the brain tissue are zero-valued, holes result from this operation. To patch these, the function binary\_fill\_holes from scipy.ndimage.morphology \cite{noauthor_multi-dimensional_nodate} is used. 
+
+In the coronal view, each slice is originally of shape (63, 48). It is then reshaped into (64, 64) by adding a zero padding to the border. Finally, the images are normalised by first clipping it from the minimum to the 99th percentile of the data in order to remove outliers and then divided by the maximum.
+
+\subsection{Training}
+
+Because of variances in the experiment setups, MR images can differ by much. To account for these variations, we apply an extensive set of transformations to our data. Namely rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips. This not only increases the data set size but also makes it more representative of the general data distribution of Mice brain MR images and results in a model with a better generalisation capability.
+  
+\section{Results}
+
+\section{Conclusion}
+
+
+\bibliographystyle{unsrt}  
+\bibliography{references}
+%\end{multicols}
+\end{document}

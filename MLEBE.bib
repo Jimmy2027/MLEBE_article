@@ -1,0 +1,46 @@
+
+@article{zhou_normalization_2019,
+	title = {Normalization in {Training} {U}-{Net} for 2D {Biomedical} {Semantic} {Segmentation}},
+	url = {http://arxiv.org/abs/1809.03783},
+	abstract = {2D biomedical semantic segmentation is important for robotic vision in surgery. Segmentation methods based on Deep Convolutional Neural Network (DCNN) can out-perform conventional methods in terms of both accuracy and levels of automation. One common issue in training a DCNN for biomedical semantic segmentation is the internal covariate shift where the training of convolutional kernels is encumbered by the distribution change of input features, hence both the training speed and performance are decreased. Batch Normalization (BN) is the first proposed method for addressing internal covariate shift and is widely used. Instance Normalization (IN) and Layer Normalization (LN) have also been proposed. Group Normalization (GN) is proposed more recently and has not yet been applied to 2D biomedical semantic segmentation, however, no specific validations on GN were given. Most DCNNs for biomedical semantic segmentation adopt BN as the normalization method by default, without reviewing its performance. In this paper, four normalization methods - BN, IN, LN and GN are compared in details, specifically for 2D biomedical semantic segmentation. U-Net is adopted as the basic DCNN structure. Three datasets regarding the Right Ventricle (RV), aorta, and Left Ventricle (LV) are used for the validation. The results show that detailed subdivision of the feature map, i.e. GN with a large group number or IN, achieves higher accuracy. This accuracy improvement mainly comes from better model generalization. Codes are uploaded and maintained at Xiao-Yun Zhou's Github.},
+	urldate = {2019-11-09},
+	journal = {arXiv:1809.03783 [cs]},
+	author = {Zhou, Xiao-Yun and Yang, Guang-Zhong},
+	month = jan,
+	year = {2019},
+	note = {arXiv: 1809.03783},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition},
+	annote = {Comment: 5 figures, 5 tables, published on IEEE Robotics and Automation Letters 2019},
+	file = {arXiv Fulltext PDF:/Users/Hendrik/Zotero/storage/RJ9ZUTAY/Zhou and Yang - 2019 - Normalization in Training U-Net for 2D Biomedical .pdf:application/pdf;arXiv.org Snapshot:/Users/Hendrik/Zotero/storage/MZUG72N9/1809.html:text/html}
+}
+
+@article{xu_deepatlas:_2019,
+	title = {{DeepAtlas}: {Joint} {Semi}-{Supervised} {Learning} of {Image} {Registration} and {Segmentation}},
+	shorttitle = {{DeepAtlas}},
+	url = {http://arxiv.org/abs/1904.08465},
+	abstract = {Deep convolutional neural networks (CNNs) are state-of-the-art for semantic image segmentation, but typically require many labeled training samples. Obtaining 3D segmentations of medical images for supervised training is difficult and labor intensive. Motivated by classical approaches for joint segmentation and registration we therefore propose a deep learning framework that jointly learns networks for image registration and image segmentation. In contrast to previous work on deep unsupervised image registration, which showed the benefit of weak supervision via image segmentations, our approach can use existing segmentations when available and computes them via the segmentation network otherwise, thereby providing the same registration benefit. Conversely, segmentation network training benefits from the registration, which essentially provides a realistic form of data augmentation. Experiments on knee and brain 3D magnetic resonance (MR) images show that our approach achieves large simultaneous improvements of segmentation and registration accuracy (over independently trained networks) and allows training high-quality models with very limited training data. Specifically, in a one-shot-scenario (with only one manually labeled image) our approach increases Dice scores (\%) over an unsupervised registration network by 2.7 and 1.8 on the knee and brain images respectively.},
+	urldate = {2019-11-09},
+	journal = {arXiv:1904.08465 [cs]},
+	author = {Xu, Zhenlin and Niethammer, Marc},
+	month = jul,
+	year = {2019},
+	note = {arXiv: 1904.08465},
+	keywords = {Computer Science - Computer Vision and Pattern Recognition},
+	annote = {Comment: To appear in MICCAI 2019},
+	file = {arXiv Fulltext PDF:/Users/Hendrik/Zotero/storage/JZEJIJ4J/Xu and Niethammer - 2019 - DeepAtlas Joint Semi-Supervised Learning of Image.pdf:application/pdf;arXiv.org Snapshot:/Users/Hendrik/Zotero/storage/6VEKMW4Z/1904.html:text/html}
+}
+
+@techreport{ioanas_optimized_2019,
+	type = {preprint},
+	title = {An {Optimized} {Registration} {Workflow} and {Standard} {Geometric} {Space} for {Small} {Animal} {Brain} {Imaging}},
+	url = {http://biorxiv.org/lookup/doi/10.1101/619650},
+	abstract = {The reliability of scientiﬁc results critically depends on reproducible and transparent data processing. Cross-subject and cross-study comparability of imaging data in general, and magnetic resonance imaging (MRI) data in particular, is contingent on the quality of registration to a standard reference space. In small animal MRI this is not adequately provided by currently used processing workﬂows, which utilize highlevel scripts optimized for human data, and adapt animal data to ﬁt the scripts, rather than vice-versa. In this fully reproducible article we showcase a generic workﬂow optimized for the mouse brain, alongside a standard reference space suited to harmonize data between analysis and operation. We present four separate metrics for automated quality control (QC), and a visualization method to aid operator inspection. Benchmarking this workﬂow against common legacy practices reveals that it performs more consistently, better preserves variance across subjects while minimizing variance across sessions, and improves both volume and smoothness conservation RMSE approximately 3-fold. We propose this open source workﬂow and the QC metrics as a new standard for small animal MRI registration, ensuring workﬂow robustness, data comparability, and region assignment validity, important criteria for the comparability of scientiﬁc results across experiments and centers.},
+	language = {en},
+	urldate = {2020-01-02},
+	institution = {Neuroscience},
+	author = {Ioanas, Horea-Ioan and Marks, Markus and Yanik, Mehmet Fatih and Rudin, Markus},
+	month = apr,
+	year = {2019},
+	doi = {10.1101/619650},
+	file = {Ioanas et al. - 2019 - An Optimized Registration Workflow and Standard Ge.pdf:/Users/Hendrik/Zotero/storage/S8LB6T6I/Ioanas et al. - 2019 - An Optimized Registration Workflow and Standard Ge.pdf:application/pdf}
+}
