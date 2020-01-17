@@ -123,11 +123,17 @@ Finally, the images are normalised by first clipping them from the minimum to th
 
 \subsection{Training}
 
+
 Because of diverse settings in the experiment setup, including animal manipulations causing artifacts, MR image quality can differ substantially between labs and even individual study populations.
 To account for these variations, we apply an extensive set of transformations to our data.
 This includes rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips.
 %% different order since you mentioned the last part of the sentence at the beginning of the paragraph.
 %% Also talk about why it's ok to increase the sample size like this.
+
+%Because of variances in the experiment setups, MR images can differ by much. 
+%To account for these variations, we apply an extensive set of transformations to our data. Namely rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips.
+
+
 This not only increases the data set size but also makes it more representative of the general data distribution of Mice brain MR images and results in a model with a better generalisation capability.
 
 \section{Results}
