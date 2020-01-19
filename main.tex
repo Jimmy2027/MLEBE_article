@@ -31,7 +31,7 @@ As part of the analysis of high-field mouse MRI data, relevant brain tissue need
 For this process to be performed automatically, brain voxels need to be classified based both on their signal intensity and position in the image.
 Nowadays, deep neural networks are the state-of-the-art methods for tissue segmentation in biomedical imaging, and thus constitute a promising method for preclinical neuroscience.
 %% outperforms current methods is a pretty high bar. We haven't really compared it to e.g. BET and other heuristic human-MRI-derived classifiers. You can still make the case that it is better, but that's a case you need to make on theoretical grounds unless you have data for the comparison.
-We present a deep learning enabled framework for segmentation of brain tissue in functional and structural MR images, that outperforms \textbf{current methods}, requiring only a fraction of the processing time needed by them.
+We present a deep learning enabled framework for segmentation of brain tissue in functional and structural MR images, \textit{that outperforms \textbf{current methods}, requiring only a fraction of the processing time needed by them}.
 \end{abstract}
 %\newpage
 
@@ -60,11 +60,11 @@ Ideally experiment setups are uniform and the resulting data does not differ muc
 Based on an approximation of the occurrence space, the network has to build a general model that enables it to extrapolate and produce sufficiently accurate predictions in new cases.
 Manually creating annotations as required to train a deep-learning classifier for high-resolution data is often infeasible, as it requires manual expert segmentation of vast amounts of slices.
 
-While our purpose was to create a workflow that generates better masks than the ones used for registration, we showed that the latter could be used as training data for the deep-learning model, by applying small changes to them.
+While our purpose was to create a workflow that generates better masks than the ones used for registration\todo{this is wrong, cite where the mask comes from}, we showed that the latter could be used as training data for the deep-learning model, by applying small changes to them.
 
 \section{The Classifier}
 \subsection{Model}
-As the architecture of the classifier, U-Net from Ronneberger et al \cite{ronneberger_u-net:_2015} was chosen based on its high performance in the field of biomedical image segmentation.
+As the architecture of the classifier, the U-Net from Ronneberger et al \cite{ronneberger_u-net:_2015} was chosen based on its high performance in the field of biomedical image segmentation.
 This is a convolutional neural network that consists of a contracting path that captures context in addition to a symmetric expanding path that enables precise localisation.
 Localisation in this context means that a class label is assigned to each pixel.
 We used the U-Net implementation from zhixuhao \cite{zhixuhao_zhixuhao/unet_2020}, written in Keras.
@@ -77,22 +77,26 @@ The set fraction rate is 0.5.
 It is known that dropout helps prevent overfitting and greatly improves the performance of deep learning models \cite{srivastava_dropout:_nodate}.
 
 Three losses were tested for the training of the model, namely the Dice-loss, the binary-cross-entropy loss and the sum of both.
+
 The Dice-loss is computed from the Dice score. It calculates the similarity of two binary samples X and Y with
 $$D_{coef} = \frac{2|X\cap Y|}{|X|+|Y|}$$
 It is a quantity ranging from 0 to 1 that is to be maximised.
 The loss is then calculated with $1-D_{coef}$.
 Because the Dice loss is not differentiable, small changes need to be made.
-The two samples to be compared are not binary but have values between 0 and 1 and instead of using the logical operation \textit{and}, element wise products are used to approximate the non-differentiable intersection operation.
-To avoid a division by zero 1 is added on the numerator and denominator.
+In our case, the two samples to be compared are normalised, grey valued images  and are thus not binary but have values between 0 and 1. 
+Additionally, instead of using the logical operation \textit{and}, element wise products are used to approximate the non-differentiable intersection operation.
+To avoid a division by zero, $+1$ is added on the numerator and denominator.
+
 Because many more pixels in the masks are 0 than 1, there is a class imbalance problem.
 It is a problem, because in this case a false positive gives a much higher loss than a false negative.
-For example, the predicting only black would give an acceptable loss, while prediciting only white pixels would not.
+For example, predicting only black would give an acceptable loss, while predicting only white pixels would not.
 Using the Dice coefficient as a loss function for training should make it invariant to this class imbalance problem as stated by Fausto Milletari et al. in \cite{milletari_v-net:_2016}.
 
 The binary cross-entropy loss, also called Log loss, is defined by:
 $$H_p (q) = -\frac{1}{N} \sum ^N _{i=1} y_i \cdot log(p(y_i))+(1-y_i) \cdot log(1-p(y_i))$$
 For pixel values of 0 and 1, it adds $log(p(y))$ for each white pixel (y=1) and $log(1-p(y))$ for every black pixel (y=0) to the loss.
-We quickly realised that the Dice-loss gives the best results and therefore used it to train the model. \todo{compare results}
+
+We quickly realised that the Dice-loss gives the best results for our problem and therefore used it to train the model. \todo{compare results}
 
 \subsection{Training}
 The model was trained slice wise, with the coronal view and 600 as the maximum number of epochs.
@@ -103,14 +107,23 @@ To improve the learning process of the network, two callbacks from Keras were us
 The latter reduces computation time and prevents overfitting.
 
 \subsection{Data Set}
-The data set consists of 3D MR images taken from an aggregation of three studies; irsabi , opfvta \cite{ioanas_whole-brain_nodate}, drlfom \cite{ioanas_effects_nodate} and other unpublished data acquired with similar parameters. \todo{cite} 
+The data set consists of 3D MR images taken from an aggregation of three studies; irsabi , opfvta \cite{ioanas_whole-brain_nodate}, drlfom \cite{ioanas_effects_nodate} and other unpublished data, acquired with similar parameters. \todo{cite} 
+
 The images are transformed into a standard space with one defined mask via SAMRI \cite{noauthor_ibt-fmi/samri_2019} and are thus defined in the same affine space.
 SAMRI is a data analysis package of the ETH/UZH Institute for Biomedical Engineering.
 It is equipped with an optimized registration workflow and standard geometric space for small animal brain imaging \cite{ioanas_optimized_2019}.
+
 Because of variance in mouse brain anatomy and in the experiment setup, some of the transformed data do not overlap perfectly with the reference template.
 To filter these images out, most of the incongruent slices were removed manually from the data set.
+
 For the registration of the images, a padding was needed to make the originally not affine space affine. 
-Due to this, the 3D volumes present many zero-valued slices, some of them overlapping with the mask.
+Due to this, the 3D volumes present many zero-valued slices, some of them overlapping with the mask.\todo{show example}
+\begin{figure}
+    \centering
+    \includegraphics[width = 0.5 \textwidth]{mask_not_overlap.pdf}
+    \caption{Caption}
+    \label{fig:my_label}
+\end{figure}
 Since it is not wanted for the model to predict a mask on black slices, the mask is set to zero where the image is as well.
 Because some pixels representing the brain tissue are zero-valued, holes result from this operation.
 To patch these, the function binary\_fill\_holes from scipy.ndimage.morphology \cite{noauthor_multi-dimensional_nodate} is used.
@@ -127,6 +140,8 @@ To account for these variations, we apply an extensive set of transformations to
 This includes rotations of up to 90$^{\circ}$, a width and height shift range of 30 pixels, a shear range of 5 pixels, zoom range of 0.2 and horizontal as well as vertical flips.
 
 This not only increases the data set size but also makes it more representative of the general data distribution of Mice brain MR images and results in a model with a better generalisation capability.
+
+Many more sophisticated methods have been tested, but it has been shown that one of the more successful data augmentation strategies is the simple transformations mentioned above \cite{perez_effectiveness_2017}.
 
 \section{Methods}
 The slice-wise predictions of the model are reconstructed to a 3D mask via the command \textit{Nifit1Image} from the neuro-imaging python package nibabel \cite{noauthor_neuroimaging_nodate}.
